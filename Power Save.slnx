@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="PowerSave.Domain/PowerSave.Domain.csproj" />
+  <Project Path="PowerSave.Application/PowerSave.Application.csproj" />
+  <Project Path="PowerSave.Infrastructure/PowerSave.Infrastructure.csproj" />
+  <Project Path="Power Save/Power Save.csproj" />
+  <Project Path="PowerSave.Tests/PowerSave.Tests.csproj" />
+</Solution>
+

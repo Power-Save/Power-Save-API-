@@ -1,0 +1,6 @@
+@Power_Save_HostAddress = http://localhost:5081
+
+GET {{Power_Save_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,143 @@
+{
+  "info": {
+    "_postman_id": "7b09bf0b-bf38-4e38-958b-powersave-auth-api",
+    "name": "PowerSave Authentication API",
+    "description": "Production-grade Authentication API Collection for PowerSave Platform (Register, Verify Phone OTP, Resend OTP, Login, Me).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5081",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Register (إنشاء حساب)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"ahmed_powersave\",\n  \"phoneNumber\": \"01012345678\",\n  \"password\": \"Password123\",\n  \"confirmPassword\": \"Password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register"]
+        },
+        "description": "ينشئ حساب جديد ويرسل رمز التحقق OTP عبر SMS (يطبع في الكونسول أثناء التطوير)."
+      }
+    },
+    {
+      "name": "2. Verify Phone OTP (تأكيد رقم الموبايل)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identifier\": \"ahmed_powersave\",\n  \"otpCode\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/verify-phone",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "verify-phone"]
+        },
+        "description": "يفعل الحساب عند إدخال رمز الـ OTP المكون من 6 أرقام."
+      }
+    },
+    {
+      "name": "3. Resend OTP (إعادة إرسال الرمز)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identifier\": \"ahmed_powersave\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/resend-otp",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "resend-otp"]
+        },
+        "description": "يعيد إرسال الرمز مع تطبيق Cooldown لمدة 60 ثانية وحد 3 محاولات لكل دفعة."
+      }
+    },
+    {
+      "name": "4. Login (تسجيل الدخول)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.success && jsonData.data && jsonData.data.accessToken) {",
+              "    pm.collectionVariables.set('token', jsonData.data.accessToken);",
+              "    console.log('JWT Token saved automatically to collection variable: token');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identifier\": \"ahmed_powersave\",\n  \"password\": \"Password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        },
+        "description": "يقبل اسم المستخدم أو رقم الموبايل. عند النجاح يتم حفظ الـ accessToken تلقائياً في متغير token لاستخدامه في ريكوست Me."
+      }
+    },
+    {
+      "name": "5. Get Current User - Me (الملف الشخصي)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me"]
+        },
+        "description": "Endpoint محمي يسترجع بيانات المستخدم صاحب التوكن."
+      }
+    }
+  ]
+}
