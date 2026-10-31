@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PowerSave.Domain.Entities;
 
@@ -30,6 +30,10 @@ public class PhoneVerificationOtpConfiguration : IEntityTypeConfiguration<PhoneV
         builder.Property(o => o.ExpiresAtUtc)
             .IsRequired();
 
+        builder.Property(o => o.FailedAttempts)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         builder.Property(o => o.RowVersion)
             .IsRowVersion();
 
@@ -38,4 +42,3 @@ public class PhoneVerificationOtpConfiguration : IEntityTypeConfiguration<PhoneV
         builder.HasIndex(o => o.PhoneNumber);
     }
 }
-

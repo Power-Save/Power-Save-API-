@@ -1,4 +1,4 @@
-﻿namespace PowerSave.Domain.Entities;
+namespace PowerSave.Domain.Entities;
 
 public class PhoneVerificationOtp
 {
@@ -14,6 +14,6 @@ public class PhoneVerificationOtp
     public DateTime? UsedAtUtc { get; set; }
     public bool IsSuperseded { get; set; }
     public DateTime? SupersededAtUtc { get; set; }
+    public int FailedAttempts { get; set; } = 0;
     public byte[] RowVersion { get; set; } = [];
 }
-

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PowerSave.Application.Common.Interfaces;
 using PowerSave.Application.Common.Localization;
@@ -14,6 +14,8 @@ namespace PowerSave.Application.Services;
 
 public class AuthService : IAuthService
 {
+    private const int MaxOtpFailedAttempts = 5;
+
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IPowerSaveDbContext _dbContext;
     private readonly IPhoneNumberValidator _phoneNumberValidator;
@@ -54,7 +56,6 @@ public class AuthService : IAuthService
         string? clientIp,
         CancellationToken cancellationToken = default)
     {
-
         if (!_consentValidator.Validate(
             request.ConsentToAccountCreationAndDataCollection,
             request.ConsentToProductImprovementDataUsage,
@@ -176,7 +177,8 @@ public class AuthService : IAuthService
             CreatedAtUtc = now,
             ExpiresAtUtc = now.AddMinutes(5),
             IsUsed = false,
-            IsSuperseded = false
+            IsSuperseded = false,
+            FailedAttempts = 0
         };
 
         var rateLimitRecord = new UserOtpRateLimit
@@ -213,7 +215,6 @@ public class AuthService : IAuthService
         VerifyPhoneRequestDto request,
         CancellationToken cancellationToken = default)
     {
-
         if (string.IsNullOrWhiteSpace(request.OtpCode) || request.OtpCode.Length != 6 || !request.OtpCode.All(char.IsDigit))
         {
             return Result<VerifyPhoneResponseDto>.Failure(AuthErrorCode.IncorrectOtp, 400);
@@ -249,6 +250,17 @@ public class AuthService : IAuthService
             return Result<VerifyPhoneResponseDto>.Failure(AuthErrorCode.IncorrectOtp, 400);
         }
 
+        if (latestOtp.FailedAttempts >= MaxOtpFailedAttempts)
+        {
+            if (!latestOtp.IsSuperseded)
+            {
+                latestOtp.IsSuperseded = true;
+                latestOtp.SupersededAtUtc = now;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            return Result<VerifyPhoneResponseDto>.Failure(AuthErrorCode.OtpMaxAttemptsExceeded, 400);
+        }
+
         if (latestOtp.IsUsed || latestOtp.IsSuperseded)
         {
             return Result<VerifyPhoneResponseDto>.Failure(AuthErrorCode.OtpAlreadyUsedOrSuperseded, 400);
@@ -261,6 +273,20 @@ public class AuthService : IAuthService
 
         if (!_otpService.VerifyOtp(request.OtpCode, latestOtp.HashedOtp, latestOtp.Salt))
         {
+            latestOtp.FailedAttempts++;
+            if (latestOtp.FailedAttempts >= MaxOtpFailedAttempts)
+            {
+                latestOtp.IsSuperseded = true;
+                latestOtp.SupersededAtUtc = now;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            if (latestOtp.FailedAttempts >= MaxOtpFailedAttempts)
+            {
+                return Result<VerifyPhoneResponseDto>.Failure(AuthErrorCode.OtpMaxAttemptsExceeded, 400);
+            }
+
             return Result<VerifyPhoneResponseDto>.Failure(AuthErrorCode.IncorrectOtp, 400);
         }
 
@@ -334,7 +360,6 @@ public class AuthService : IAuthService
             }
             else
             {
-
                 if (rateLimit.BatchIndex == 1)
                 {
                     rateLimit.BatchIndex = 2;
@@ -343,7 +368,6 @@ public class AuthService : IAuthService
                 }
                 else
                 {
-
                     rateLimit.BatchIndex = 1;
                     rateLimit.ResendAttemptsInCurrentBatch = 0;
                     rateLimit.CooldownUntilUtc = null;
@@ -410,7 +434,8 @@ public class AuthService : IAuthService
             CreatedAtUtc = now,
             ExpiresAtUtc = now.AddMinutes(5),
             IsUsed = false,
-            IsSuperseded = false
+            IsSuperseded = false,
+            FailedAttempts = 0
         };
 
         _dbContext.PhoneVerificationOtps.Add(newOtpRecord);
@@ -446,16 +471,22 @@ public class AuthService : IAuthService
         var user = await FindUserByIdentifierAsync(request.Identifier, cancellationToken);
         if (user is null)
         {
+            return Result<LoginResponseDto>.Failure(AuthErrorCode.InvalidCredentials, 401);
+        }
 
+        if (await _userManager.IsLockedOutAsync(user))
+        {
             return Result<LoginResponseDto>.Failure(AuthErrorCode.InvalidCredentials, 401);
         }
 
         var passwordValid = await _userManager.CheckPasswordAsync(user, request.Password);
         if (!passwordValid)
         {
-
+            await _userManager.AccessFailedAsync(user);
             return Result<LoginResponseDto>.Failure(AuthErrorCode.InvalidCredentials, 401);
         }
+
+        await _userManager.ResetAccessFailedCountAsync(user);
 
         if (!user.PhoneNumberConfirmed)
         {
@@ -522,4 +553,3 @@ public class AuthService : IAuthService
         return null;
     }
 }
-

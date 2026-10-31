@@ -1,4 +1,4 @@
-﻿namespace PowerSave.Application.Common.Localization;
+namespace PowerSave.Application.Common.Localization;
 
 public static class AuthMessages
 {
@@ -34,6 +34,7 @@ public static class AuthMessages
             AuthErrorCode.ConcurrencyConflict => "حدث تعارض أثناء معالجة الطلب، يرجى إعادة المحاولة.",
             AuthErrorCode.SmsDeliveryFailed => "تم إنشاء الحساب ولكن تعذر إرسال رسالة التحقق حالياً، يرجى طلب إعادة الإرسال.",
             AuthErrorCode.PasswordMismatch => "كلمة المرور وتأكيد كلمة المرور غير متطابقتين.",
+            AuthErrorCode.OtpMaxAttemptsExceeded => "تم استنفاد الحد الأقصى للمحاولات الخاطئة لهذا الرمز (5 محاولات). تم إبطال الرمز، يرجى طلب رمز جديد.",
             _ => "حدث خطأ أثناء معالجة الطلب."
         };
     }
@@ -70,8 +71,8 @@ public static class AuthMessages
             AuthErrorCode.ConcurrencyConflict => "A concurrency conflict occurred. Please retry.",
             AuthErrorCode.SmsDeliveryFailed => "Account created, but SMS delivery failed. Please request an OTP resend.",
             AuthErrorCode.PasswordMismatch => "Password and password confirmation do not match.",
+            AuthErrorCode.OtpMaxAttemptsExceeded => "Maximum incorrect OTP attempts exceeded (5 attempts). The code has been invalidated, please request a new verification code.",
             _ => "An error occurred while processing the request."
         };
     }
 }
-

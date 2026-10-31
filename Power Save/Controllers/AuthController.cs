@@ -1,6 +1,7 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PowerSave.Application.DTOs;
 using PowerSave.Application.Interfaces;
 
@@ -36,6 +37,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("verify-phone")]
+    [EnableRateLimiting("OtpPolicy")]
     [ProducesResponseType(typeof(ApiResponse<VerifyPhoneResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
@@ -52,6 +54,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("resend-otp")]
+    [EnableRateLimiting("OtpPolicy")]
     [ProducesResponseType(typeof(ApiResponse<ResendOtpResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
@@ -76,6 +79,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("LoginPolicy")]
     [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
@@ -113,4 +117,3 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<UserProfileResponseDto>.Ok(result.Data!));
     }
 }
-

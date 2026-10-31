@@ -1,4 +1,4 @@
-﻿namespace PowerSave.Application.Common.Localization;
+namespace PowerSave.Application.Common.Localization;
 
 public enum AuthErrorCode
 {
@@ -27,6 +27,6 @@ public enum AuthErrorCode
     ConcurrencyConflict = 22,
     SmsDeliveryFailed = 23,
     GeneralError = 24,
-    PasswordMismatch = 25
+    PasswordMismatch = 25,
+    OtpMaxAttemptsExceeded = 26
 }
-

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PowerSave.Application.Common.Localization;
 using PowerSave.Application.DTOs;
@@ -289,5 +289,50 @@ public class OtpLifecycleTests
 
         Assert.True(b2_r4.RemainingWaitSeconds > 86000);
     }
-}
 
+    [Fact]
+    public async Task VerifyOtp_FiveIncorrectAttempts_ShouldInvalidateOtpAndLockOut()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        var authService = CreateAuthService(dbName);
+
+        await authService.RegisterAsync(new RegisterRequestDto
+        {
+            PhoneNumber = "01012345678",
+            Username = "BruteForceUser",
+            Password = "Password123",
+            ConsentToAccountCreationAndDataCollection = true,
+            ConsentToProductImprovementDataUsage = true,
+            ConsentDocumentVersion = "v1.0"
+        }, "127.0.0.1");
+
+        var validOtp = _smsSender.LastExtractedOtp!;
+
+        for (int i = 1; i <= 4; i++)
+        {
+            var res = await authService.VerifyPhoneAsync(new VerifyPhoneRequestDto
+            {
+                Identifier = "BruteForceUser",
+                OtpCode = "000000"
+            });
+            Assert.False(res.IsSuccess);
+            Assert.Equal(AuthErrorCode.IncorrectOtp, res.ErrorCode);
+        }
+
+        var fifthResult = await authService.VerifyPhoneAsync(new VerifyPhoneRequestDto
+        {
+            Identifier = "BruteForceUser",
+            OtpCode = "000000"
+        });
+        Assert.False(fifthResult.IsSuccess);
+        Assert.Equal(AuthErrorCode.OtpMaxAttemptsExceeded, fifthResult.ErrorCode);
+
+        var validOtpResult = await authService.VerifyPhoneAsync(new VerifyPhoneRequestDto
+        {
+            Identifier = "BruteForceUser",
+            OtpCode = validOtp
+        });
+        Assert.False(validOtpResult.IsSuccess);
+        Assert.True(validOtpResult.ErrorCode == AuthErrorCode.OtpMaxAttemptsExceeded || validOtpResult.ErrorCode == AuthErrorCode.OtpAlreadyUsedOrSuperseded);
+    }
+}
