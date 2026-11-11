@@ -19,11 +19,7 @@ public class DevSmsSender : ISmsSender
     {
         SentMessages.Add((phoneNumber, message, DateTime.UtcNow));
 
-#if DEBUG
         _logger.LogInformation("[DEV SMS SIMULATOR] SMS dispatched to {PhoneNumber}: {Message}", phoneNumber, message);
-#else
-        _logger.LogInformation("[DEV SMS SIMULATOR] SMS dispatched to recipient.");
-#endif
 
         return Task.FromResult(true);
     }
