@@ -17,6 +17,17 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 builder.Services.AddControllers();
 
+// إعداد CORS للسماح لتطبيقات الموبايل والفرونت إند بالاتصال بالـ API
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -120,20 +131,22 @@ var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
+// تفعيل Swagger ليعمل دائماً (محلياً وعلى السيرفر) لتجربة الـ APIs مباشرة
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "PowerSave Authentication API v1");
-        c.RoutePrefix = "swagger";
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "PowerSave Authentication API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// تحويل الرابط الرئيسي مباشرة إلى صفحة الـ Swagger لسهولة التجربة
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.MapControllers();
 
