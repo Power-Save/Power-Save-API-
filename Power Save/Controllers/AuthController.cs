@@ -116,4 +116,38 @@ public class AuthController : ControllerBase
 
         return Ok(ApiResponse<UserProfileResponseDto>.Ok(result.Data!));
     }
+
+    [HttpGet("dev-otp")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult GetLatestDevOtp([FromQuery] string phoneNumber, [FromServices] IConfiguration config)
+    {
+        var provider = config.GetValue<string>("SmsProvider:Provider");
+        if (provider != "Dev")
+        {
+            return NotFound(ApiResponse.Fail("هذه الميزة متاحة فقط في وضع الاختبار.", "DEV_ONLY"));
+        }
+
+        var normalized = phoneNumber.Trim().Replace(" ", "").Replace("-", "");
+        var lastMsg = PowerSave.Infrastructure.Sms.DevSmsSender.SentMessages
+            .Where(m => m.PhoneNumber.Contains(normalized) || normalized.Contains(m.PhoneNumber))
+            .OrderByDescending(m => m.TimestampUtc)
+            .FirstOrDefault();
+
+        if (lastMsg == default)
+        {
+            return NotFound(ApiResponse.Fail("لم يتم إرسال أي رمز لهذا الرقم بعد.", "OTP_NOT_FOUND"));
+        }
+
+        var match = System.Text.RegularExpressions.Regex.Match(lastMsg.Message, @"\d{6}");
+        var otp = match.Success ? match.Value : null;
+
+        return Ok(ApiResponse<object>.Ok(new
+        {
+            phoneNumber = lastMsg.PhoneNumber,
+            otp = otp,
+            fullMessage = lastMsg.Message,
+            sentAtUtc = lastMsg.TimestampUtc
+        }, "تم جلب رمز الاختبار بنجاح."));
+    }
 }
