@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PowerSave.Application.Common.Interfaces;
 using PowerSave.Application.Interfaces;
 using PowerSave.Domain.Entities;
+using PowerSave.Infrastructure.BackgroundServices;
 using PowerSave.Infrastructure.Persistence;
 using PowerSave.Infrastructure.Persistence.Repositories;
 using PowerSave.Infrastructure.Security;
@@ -66,6 +67,8 @@ public static class DependencyInjection
         {
             services.AddSingleton<ISmsSender, DevSmsSender>();
         }
+
+        services.AddHostedService<UnverifiedUserCleanupBackgroundService>();
 
         return services;
     }
