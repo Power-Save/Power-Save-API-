@@ -48,5 +48,7 @@ public enum AuthErrorCode
     ApplianceNotFound = 43,
     ApplianceModelNotFound = 44,
     StageAlreadyCompleted = 45,
-    PersonalizationAlreadyCompleted = 46
+    PersonalizationAlreadyCompleted = 46,
+    PasswordTooLong = 47,
+    UnsupportedPasswordCharacters = 48
 }

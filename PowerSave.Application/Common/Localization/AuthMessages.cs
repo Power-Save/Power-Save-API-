@@ -14,6 +14,8 @@ public static class AuthMessages
             AuthErrorCode.DuplicatePhoneNumber => "رقم الهاتف مسجل مسبقاً لحساب آخر.",
             AuthErrorCode.PasswordContainsSpaces => "لا يُسمح بوجود مسافات داخل كلمة المرور.",
             AuthErrorCode.PasswordTooShort => "يجب ألا يقل طول كلمة المرور عن 8 خانات.",
+            AuthErrorCode.PasswordTooLong => "يجب ألا يتجاوز طول كلمة المرور 64 خانة.",
+            AuthErrorCode.UnsupportedPasswordCharacters => "تحتوي كلمة المرور على رموز غير مسموح بها. يُسمح فقط بالحروف الإنجليزية، الأرقام، والرموز الخاصة القياسية (بدون مسافات أو إيموجي).",
             AuthErrorCode.PasswordMissingLetterOrDigit => "يجب أن تحتوي كلمة المرور على حرف إنجليزي واحد على الأقل ورقم واحد على الأقل.",
             AuthErrorCode.WeakPassword => "كلمة المرور ضعيفة وسهلة التخمين. يرجى تجنب تكرار نفس الحرف أو استخدام كلمات المرور الشائعة.",
             AuthErrorCode.MissingRequiredConsent => "الموافقة الإلزامية على إنشاء الحساب وسياسة البيانات مطلوبة للمتابعة.",

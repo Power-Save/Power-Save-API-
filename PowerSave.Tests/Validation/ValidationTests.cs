@@ -1,4 +1,5 @@
-﻿using PowerSave.Application.Validation;
+﻿using PowerSave.Application.Common.Localization;
+using PowerSave.Application.Validation;
 using Xunit;
 
 namespace PowerSave.Tests.Validation;
@@ -98,15 +99,51 @@ public class ValidationTests
     [Theory]
     [InlineData("StrongSecret1")]
     [InlineData("Pass_word1")]
-
     [InlineData("power100Save")]
     [InlineData("validP@ssw0rd")]
     [InlineData("lowercase1")]
+    [InlineData("p1!#$%&*")]
+    [InlineData("P@ss:w0rd!#$")]
     public void PasswordPolicyValidator_ValidPasswords_ShouldSucceed(string password)
     {
         var isValid = _passwordValidator.Validate(password, out var error);
         Assert.True(isValid);
         Assert.Null(error);
+    }
+
+    [Fact]
+    public void PasswordPolicyValidator_PasswordExactly64Chars_ShouldSucceed()
+    {
+        var maxPassword = new string('a', 30) + new string('b', 30) + "1234";
+        Assert.Equal(64, maxPassword.Length);
+        var isValid = _passwordValidator.Validate(maxPassword, out var error);
+        Assert.True(isValid);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public void PasswordPolicyValidator_PasswordExceeding64Chars_ShouldFail()
+    {
+        var longPassword = new string('a', 30) + new string('b', 30) + "12345";
+        Assert.Equal(65, longPassword.Length);
+        var isValid = _passwordValidator.Validate(longPassword, out var error);
+        Assert.False(isValid);
+        Assert.NotNull(error);
+        Assert.Equal(AuthMessages.GetArabicMessage(AuthErrorCode.PasswordTooLong), error);
+    }
+
+    [Theory]
+    [InlineData("ValidPass1🔥")]
+    [InlineData("😀Pass1234")]
+    [InlineData("Pass1234كلمة")]
+    [InlineData("كلمةمرورA1")]
+    [InlineData("P@ssw0rd1ü")]
+    public void PasswordPolicyValidator_NonAsciiCharacters_ShouldFail(string password)
+    {
+        var isValid = _passwordValidator.Validate(password, out var error);
+        Assert.False(isValid);
+        Assert.NotNull(error);
+        Assert.Equal(AuthMessages.GetArabicMessage(AuthErrorCode.UnsupportedPasswordCharacters), error);
     }
 
     [Theory]

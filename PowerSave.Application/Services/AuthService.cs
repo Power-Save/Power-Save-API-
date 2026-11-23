@@ -97,9 +97,13 @@ public class AuthService : IAuthService
                     ? AuthErrorCode.PasswordContainsSpaces
                     : request.Password.Length < 8
                         ? AuthErrorCode.PasswordTooShort
-                        : (!request.Password.Any(char.IsLetter) || !request.Password.Any(char.IsDigit))
-                            ? AuthErrorCode.PasswordMissingLetterOrDigit
-                            : AuthErrorCode.WeakPassword;
+                        : request.Password.Length > 64
+                            ? AuthErrorCode.PasswordTooLong
+                            : request.Password.Any(c => c < 33 || c > 126)
+                                ? AuthErrorCode.UnsupportedPasswordCharacters
+                                : (!request.Password.Any(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) || !request.Password.Any(c => c >= '0' && c <= '9'))
+                                    ? AuthErrorCode.PasswordMissingLetterOrDigit
+                                    : AuthErrorCode.WeakPassword;
             return Result<RegisterResponseDto>.Failure(code, 400, passwordError);
         }
 

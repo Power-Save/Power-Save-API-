@@ -47,6 +47,18 @@ public class PasswordPolicyValidator : IPasswordPolicyValidator
             return false;
         }
 
+        if (password.Length > 64)
+        {
+            errorMessage = AuthMessages.GetArabicMessage(AuthErrorCode.PasswordTooLong);
+            return false;
+        }
+
+        if (password.Any(c => c < 33 || c > 126))
+        {
+            errorMessage = AuthMessages.GetArabicMessage(AuthErrorCode.UnsupportedPasswordCharacters);
+            return false;
+        }
+
         bool hasLetter = password.Any(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
 
         bool hasDigit = password.Any(char.IsDigit);
